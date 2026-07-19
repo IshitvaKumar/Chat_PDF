@@ -64,6 +64,12 @@ export async function answerQuestion(documentId: string, question: string) {
       type: "file_search",
       file_search_store_names: [document.fileSearchStoreName],
     }],
+  }, {
+    // Return a useful retry message before a serverless host returns its own
+    // non-JSON 504 page. A new request can succeed once Gemini's free-tier
+    // retrieval service finishes making a recently uploaded PDF searchable.
+    timeout: 25_000,
+    maxRetries: 0,
   });
 
   const result = answerAndCitations(interaction.steps);

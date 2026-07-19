@@ -40,6 +40,7 @@ A secure, single-user MVP for uploading a PDF and asking document-grounded quest
 - This app uses Gemini File Search only. It does not enable Google Search grounding, URL Context, a paid key, or billing.
 - Keep billing disabled for the Google project that owns your API key. Google enforces free-tier availability and quota by project and region; if quota runs out, requests fail instead of becoming paid requests.
 - Gemini's free tier may use submitted content to improve Google products. Do not upload sensitive PDFs. Consult Google's current terms and privacy controls before using non-public material.
+- Gemini File Search can take time to make a new document retrievable. The chat request gives Gemini up to 25 seconds, then returns a readable retry message instead of allowing a hosting platform to return an opaque timeout page.
 
 ## Production checklist
 

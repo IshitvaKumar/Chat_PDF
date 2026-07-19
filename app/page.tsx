@@ -14,6 +14,18 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+async function readJson<T>(response: Response, fallback: string): Promise<T> {
+  const body = await response.text();
+  try {
+    return JSON.parse(body) as T;
+  } catch {
+    if (response.status === 504) {
+      throw new Error("The server timed out while waiting for Gemini. Wait a minute and try again.");
+    }
+    throw new Error(`${fallback} (server status ${response.status}).`);
+  }
+}
+
 export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [document, setDocument] = useState<DocumentRecord | null>(null);
@@ -33,7 +45,7 @@ export default function Home() {
       const formData = new FormData();
       formData.append("file", file);
       const response = await fetch("/api/documents", { method: "POST", body: formData });
-      const payload = (await response.json()) as DocumentRecord | { error: string };
+      const payload = await readJson<DocumentRecord | { error: string }>(response, "The PDF could not be processed");
 
       if (!response.ok || "error" in payload) {
         throw new Error("error" in payload ? payload.error : "The PDF could not be processed.");
@@ -62,9 +74,10 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ documentId: document.id, question: trimmedQuestion }),
       });
-      const payload = (await response.json()) as
+      const payload = await readJson<
         | { answer: string; citations: ChatCitation[] }
-        | { error: string };
+        | { error: string }
+      >(response, "Unable to answer that question");
 
       if (!response.ok || "error" in payload) {
         throw new Error("error" in payload ? payload.error : "Unable to answer that question.");
